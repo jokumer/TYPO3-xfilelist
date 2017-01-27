@@ -1,0 +1,11 @@
+# cat=Filelist/1; type=boolean; label=Enable fileList configuration:Enable or disable the configuration of filelist
+fileListConfiguration = 1
+
+# cat=Filelist/2; type=integer; label=Default max items shown:Default Max items shown in filelist, default is 40
+fileListConfiguration_iLimit = 40
+
+# cat=Filelist/3; type=integer; label=Max length of file title:Define the length of shown file titles, default is 30 characters (also defined in user settings "titleLen", maximum is used)
+fileListConfiguration_fixedL = 30
+
+# cat=Filesearch/1; type=string; label=Search fields for metadata: Specify commaseparated list of fields from table sys_file_metadata to include in file search.
+sysFileMetadataSearchFields = title,description,keywords,caption
