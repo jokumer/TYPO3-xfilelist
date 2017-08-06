@@ -1,0 +1,54 @@
+{
+  "repositories": [
+    {
+        "type": "composer",
+        "url": "https://composer.typo3.org/"
+      }
+  ],
+  "name": "jokumer/xfilelist",
+  "type": "typo3-cms-extension",
+  "description": "",
+  "keywords": [
+    "TYPO3",
+    "extension"
+  ],
+  "homepage": "https://www.enobe.de",
+  "authors": [
+    {
+      "name": "Joerg Kummer",
+      "role": "Developer",
+      "homepage": "https://www.enobe.de"
+    }
+  ],
+  "license": [
+    "GPL-2.0+"
+  ],
+  "require": {
+    "typo3/cms-core": ">=8.7.0",
+  },
+  "autoload": {
+    "psr-4": {
+      "Jokumer\\Xfilelist\\": "Classes"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.8.0",
+    "friendsofphp/php-cs-fixer": "^2.0"
+  },
+  "config": {
+    "vendor-dir": ".Build/vendor",
+    "bin-dir": ".Build/bin"
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "mkdir -p .Build/Web/typo3conf/ext/",
+      "[ -L .Build/Web/typo3conf/ext/xfilelist ] || ln -snvf ../../../../. .Build/Web/typo3conf/ext/xfilelist"
+    ]
+  },
+  "extra": {
+    "typo3/cms": {
+      "cms-package-dir": "{$vendor-dir}/typo3/cms",
+      "web-dir": ".Build/Web"
+    }
+  }
+}
