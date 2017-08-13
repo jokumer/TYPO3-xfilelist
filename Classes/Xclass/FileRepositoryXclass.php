@@ -1,6 +1,8 @@
 <?php
 namespace Jokumer\Xfilelist\Xclass;
 
+use Doctrine\DBAL\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -80,12 +82,27 @@ class FileRepositoryXclass extends FileRepository
             $searchFields = array('title', 'description', 'keywords', 'caption');
         }
         $searchFieldsForWhere = array_intersect($searchFields, $availableFields);
-        $additionalWhere = '';
+        $records = [];
+        /** @var \TYPO3\CMS\Core\Database\Query\QueryBuilder $queryBuilder */
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('sys_file_metadata');
+
         if (!empty($searchFieldsForWhere)) {
             $additionalWhereItems = array();
             foreach ($searchFieldsForWhere as $searchField) {
-                $additionalWhereItems[] = $searchField . ' LIKE \'%' . $searchWord . '%\'';
+                $additionalWhereItems[] = $queryBuilder->expr()->like(
+                    $searchField,
+                    $queryBuilder->createNamedParameter('%' . $searchWord . '%')
+                );
+                    //$searchField . ' LIKE \'%' . $searchWord . '%\'';
             }
+            $res = $queryBuilder
+                ->select('file')
+                ->from('sys_file_metadata')
+                ->orWhere(...$additionalWhereItems)
+                ->orderBy('file')
+                ->execute();
+            /*
             $records = $this->getDatabaseConnection()->exec_SELECTgetRows(
                 'file',
                 'sys_file_metadata',
@@ -94,10 +111,13 @@ class FileRepositoryXclass extends FileRepository
                 '',
                 '',
                 'file'
-            );
+            );*/
+            while ($row = $res->fetch()) {
+                $records[] = $row['file'];
+            }
         }
         if (is_array($records)) {
-            return array_keys($records);
+            return $records;
         } else {
             return array();
         }
