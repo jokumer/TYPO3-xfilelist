@@ -1,7 +1,6 @@
 <?php
 namespace Jokumer\Xfilelist\Xclass;
 
-use TYPO3\CMS\Xfilelist\RecordListBrowserFileList;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Recordlist\Browser\FileList;
@@ -79,7 +78,7 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
      */
     public function getFilelist(Folder $folderObject, array $files, $thumbs = false) {
         /** @var RecordListBrowserFileList; $fileList */
-        $fileList = GeneralUtility::makeInstance(RecordListBrowserFileList::class);
+        $fileList = GeneralUtility::makeInstance(\Jokumer\Xfilelist\RecordListBrowserFileList::class);
         $fileList->thumbs = $thumbs;
         $fileList->start($folderObject, $this->pointer, false, false, false, true);
         $rowList = 'fileext,tstamp,size';
