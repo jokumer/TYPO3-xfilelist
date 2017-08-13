@@ -17,7 +17,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'modify_tables' => '',
 	'clearCacheOnLoad' => 0,
 	'lockType' => '',
-	'author' => 'Joerg kummer',
+	'author' => 'Joerg Kummer',
 	'author_email' => 'typo3 et enobe dot de',
 	'author_company' => 'enobe.de',
 	'CGLcompliance' => '',
@@ -26,7 +26,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'_md5_values_when_last_written' => '',
 	'constraints' => array(
 		'depends' => array(
-			'typo3' => '7.6.0-7.6.99',
+			'typo3' => '7.6.0-8.9.99',
 		),
 		'conflicts' => array(
 		),
