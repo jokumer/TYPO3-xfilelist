@@ -39,6 +39,19 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
 class RecordListBrowserFileList extends AbstractRecordList
 {
     /**
+     * The mode determines the main kind of output of the element browser.
+     *
+     * There are these options for values:
+     *  - "db" will allow you to browse for pages or records in the page tree for FormEngine select fields
+     *  - "file" will allow you to browse for files in the folder mounts for FormEngine file selections
+     *  - "folder" will allow you to browse for folders in the folder mounts for FormEngine folder selections
+     *  - Other options may be registered via extensions
+     *
+     * @var string
+     */
+    protected $mode;
+
+    /**
      * Default Max items shown
      *
      * @var int
@@ -211,6 +224,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                 $this->fixedL = $settings['fileListConfiguration_fixedL'];
             }
         }
+        $this->mode = GeneralUtility::_GP('mode');
     }
 
     /**
@@ -650,7 +664,7 @@ class RecordListBrowserFileList extends AbstractRecordList
      */
     public function listURL($altId = '', $table = '-1', $exclList = '')
     {
-        return $this->getThisScript() . 'id=' . ($altId !== '' ? $altId : $this->id);
+        return $this->getThisScript() . 'id=' . ($altId !== '' ? $altId : $this->id) . '&mode=' . rawurlencode($this->mode);
     }
 
     /**
