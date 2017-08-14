@@ -26,7 +26,7 @@
     }
   },
   "replace": {
-    "collect": "self.version",
+    "xfilelist": "self.version",
     "typo3-ter/collect": "self.version"
   }
 }
