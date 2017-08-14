@@ -69,10 +69,11 @@ class FileRepositoryXclass extends FileRepository
     /**
      * Get file uids from sys_file_metadata records matching search word
      *
+     * @param integer $limit
      * @param string $searchWord
      * @return array
      */
-    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord)
+    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord, $limit=5000)
     {
         $availableFields = $this->getSysFileMetaDataTextFields();
         $extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['xfilelist']);
@@ -109,7 +110,7 @@ class FileRepositoryXclass extends FileRepository
                 'sys_language_uid IN (0,-1) AND (' . implode(' OR ', $additionalWhereItems) . ')',
                 '',
                 '',
-                '',
+                $limit,
                 'file'
             );*/
             while ($row = $res->fetch()) {
