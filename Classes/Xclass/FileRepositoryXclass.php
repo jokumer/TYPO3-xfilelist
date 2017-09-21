@@ -40,27 +40,29 @@ class FileRepositoryXclass extends FileRepository
 
         $fileUidsFromMetaDataRecordsMatchingSearchWord = $this->getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord);
 
-        $files = array();
+        $files = [];
         foreach ($fileRecords as $fileRecord) {
-            if (!empty($allowedFileExtension)
-                && !in_array($fileRecord['extension'], $allowedFileExtension)
-            ) {
-                continue;
-            }
-            if (!empty($fileUidsFromMetaDataRecordsMatchingSearchWord)
-                && !in_array($fileRecord['uid'],
-                    $fileUidsFromMetaDataRecordsMatchingSearchWord) && stristr($fileRecord['name'],
-                    $searchWord) === false
-            ) {
-                continue;
-            }
             try {
-                $files[] = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
+                if (!empty($allowedFileExtension)
+                    && !in_array($fileRecord['extension'], $allowedFileExtension)
+                ) {
+                    continue;
+                }
+                if (!empty($fileUidsFromMetaDataRecordsMatchingSearchWord)
+                    && in_array($fileRecord['uid'], $fileUidsFromMetaDataRecordsMatchingSearchWord)
+                ) {
+                    $files[] = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
+                }
+                $nameParts = str_getcsv($searchWord, ' ');
+                foreach ($nameParts as $namePart) {
+                    if (strpos($fileRecord['name'], $namePart) !== false) {
+                        $files[] = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
+                    }
+                }
             } catch (\TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException $ignoredException) {
                 continue;
             }
         }
-
         return $files;
     }
 
