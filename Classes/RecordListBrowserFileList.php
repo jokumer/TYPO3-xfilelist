@@ -25,7 +25,7 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
 
 /**
  * Class RecordListBrowserFileList
- * Copy from \TYPO3\CMS\Filelist\FileList CMS v7.6.15
+ * Copy from \TYPO3\CMS\Filelist\FileList CMS v7.6
  * To use nearly same codebase from Filelist\Filelist also in RecordList\Browser\FileBrowser
  *
  * @package TYPO3
@@ -689,9 +689,13 @@ class RecordListBrowserFileList extends AbstractRecordList
      * The URL however is not relative, otherwise GeneralUtility::sanitizeLocalUrl() would say that
      * the URL would be invalid
      *
+     * @param string $altId
+     * @param string $table Table name to display. Enter "-1" for the current table.
+     * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
+     *
      * @return string URL
      */
-    public function listURL()
+    public function listURL($altId = '', $table = '-1', $exclList = '')
     {
         $params = [
             'target' => rawurlencode($this->folderObject->getCombinedIdentifier()),
