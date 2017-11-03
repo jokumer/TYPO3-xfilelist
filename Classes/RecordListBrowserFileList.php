@@ -27,7 +27,7 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
 
 /**
  * Class RecordListBrowserFileList
- * Copy from \TYPO3\CMS\Filelist\FileList CMS v7.6.15
+ * Copy from \TYPO3\CMS\Filelist\FileList CMS v8.7
  * To use nearly same codebase from Filelist\Filelist also in RecordList\Browser\FileBrowser
  *
  * @package TYPO3
@@ -638,11 +638,15 @@ class RecordListBrowserFileList extends AbstractRecordList
      * The URL however is not relative, otherwise GeneralUtility::sanitizeLocalUrl() would say that
      * the URL would be invalid
      *
+     * @param string $altId
+     * @param string $table Table name to display. Enter "-1" for the current table.
+     * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
+     *
      * @remove
      * @deprecated PLEASE REMOVE
      * @return string URL
      */
-    public function listURL__REMOVE()
+    public function listURL__REMOVE($altId = '', $table = '-1', $exclList = '')
     {
         $params = [
             'target' => rawurlencode($this->folderObject->getCombinedIdentifier()),
@@ -738,7 +742,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                                                 $translations[$languageId]['uid'] => 'edit'
                                             ]
                                         ],
-                                        'returnUrl' => $this->listURL()
+                                        'returnUrl' => $this->listURL__REMOVE()
                                     ];
                                     $flagButtonIcon = $this->iconFactory->getIcon($flagIcon, Icon::SIZE_SMALL, 'overlay-edit')->render();
                                     $url = BackendUtility::getModuleUrl('record_edit', $urlParameters);
@@ -747,7 +751,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                                 } else {
                                     $parameters = [
                                         'justLocalized' => 'sys_file_metadata:' . $metaDataRecord['uid'] . ':' . $languageId,
-                                        'returnUrl' => $this->listURL()
+                                        'returnUrl' => $this->listURL__REMOVE()
                                     ];
                                     $returnUrl = BackendUtility::getModuleUrl('record_edit', $parameters);
                                     $href = BackendUtility::getLinkToDataHandlerAction(
@@ -986,7 +990,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                         $metaData['uid'] => 'edit'
                     ]
                 ],
-                'returnUrl' => $this->listURL()
+                'returnUrl' => $this->listURL__REMOVE()
             ];
             $url = BackendUtility::getModuleUrl('record_edit', $urlParameters);
             $title = htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/Resources/Private/Language/locallang_core.xlf:cm.editMetadata'));
