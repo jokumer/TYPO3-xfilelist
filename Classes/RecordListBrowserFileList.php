@@ -642,11 +642,9 @@ class RecordListBrowserFileList extends AbstractRecordList
      * @param string $table Table name to display. Enter "-1" for the current table.
      * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
      *
-     * @remove
-     * @deprecated PLEASE REMOVE
      * @return string URL
      */
-    public function listURL__REMOVE($altId = '', $table = '-1', $exclList = '')
+    public function listURL($altId = '', $table = '-1', $exclList = '')
     {
         $params = [
             'target' => rawurlencode($this->folderObject->getCombinedIdentifier()),
@@ -656,19 +654,6 @@ class RecordListBrowserFileList extends AbstractRecordList
             $params['searchWord'] = $this->getSearchWord();
         }
         return GeneralUtility::linkThisScript($params);
-    }
-
-    /**
-     * Creates the URL to this script, including all relevant GPvars
-     *
-     * @param string $altId Alternative id value. Enter blank string for the current id ($this->id)
-     * @param string $table Table name to display. Enter "-1" for the current table.
-     * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
-     * @return string URL
-     */
-    public function listURL($altId = '', $table = '-1', $exclList = '')
-    {
-        return $this->getThisScript() . 'id=' . ($altId !== '' ? $altId : $this->id) . '&mode=' . rawurlencode($this->mode);
     }
 
     /**
@@ -742,7 +727,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                                                 $translations[$languageId]['uid'] => 'edit'
                                             ]
                                         ],
-                                        'returnUrl' => $this->listURL__REMOVE()
+                                        'returnUrl' => $this->listURL()
                                     ];
                                     $flagButtonIcon = $this->iconFactory->getIcon($flagIcon, Icon::SIZE_SMALL, 'overlay-edit')->render();
                                     $url = BackendUtility::getModuleUrl('record_edit', $urlParameters);
@@ -751,7 +736,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                                 } else {
                                     $parameters = [
                                         'justLocalized' => 'sys_file_metadata:' . $metaDataRecord['uid'] . ':' . $languageId,
-                                        'returnUrl' => $this->listURL__REMOVE()
+                                        'returnUrl' => $this->listURL()
                                     ];
                                     $returnUrl = BackendUtility::getModuleUrl('record_edit', $parameters);
                                     $href = BackendUtility::getLinkToDataHandlerAction(
@@ -990,7 +975,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                         $metaData['uid'] => 'edit'
                     ]
                 ],
-                'returnUrl' => $this->listURL__REMOVE()
+                'returnUrl' => $this->listURL()
             ];
             $url = BackendUtility::getModuleUrl('record_edit', $urlParameters);
             $title = htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/Resources/Private/Language/locallang_core.xlf:cm.editMetadata'));
