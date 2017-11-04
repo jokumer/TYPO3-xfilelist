@@ -27,7 +27,7 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
 
 /**
  * Class RecordListBrowserFileList
- * Copy from \TYPO3\CMS\Filelist\FileList CMS v7.6.15
+ * Copy from \TYPO3\CMS\Filelist\FileList CMS v8.7
  * To use nearly same codebase from Filelist\Filelist also in RecordList\Browser\FileBrowser
  *
  * @package TYPO3
@@ -638,11 +638,12 @@ class RecordListBrowserFileList extends AbstractRecordList
      * The URL however is not relative, otherwise GeneralUtility::sanitizeLocalUrl() would say that
      * the URL would be invalid
      *
-     * @remove
-     * @deprecated PLEASE REMOVE
+     * @param string $altId Alternative id value. Enter blank string for the current id ($this->id)
+     * @param string $table Table name to display. Enter "-1" for the current table.
+     * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
      * @return string URL
      */
-    public function listURL__REMOVE()
+    public function listURL($altId = '', $table = '-1', $exclList = '')
     {
         $params = [
             'target' => rawurlencode($this->folderObject->getCombinedIdentifier()),
@@ -652,19 +653,6 @@ class RecordListBrowserFileList extends AbstractRecordList
             $params['searchWord'] = $this->getSearchWord();
         }
         return GeneralUtility::linkThisScript($params);
-    }
-
-    /**
-     * Creates the URL to this script, including all relevant GPvars
-     *
-     * @param string $altId Alternative id value. Enter blank string for the current id ($this->id)
-     * @param string $table Table name to display. Enter "-1" for the current table.
-     * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
-     * @return string URL
-     */
-    public function listURL($altId = '', $table = '-1', $exclList = '')
-    {
-        return $this->getThisScript() . 'id=' . ($altId !== '' ? $altId : $this->id) . '&mode=' . rawurlencode($this->mode);
     }
 
     /**
