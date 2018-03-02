@@ -26,7 +26,7 @@ class FileRepositoryXclass extends FileRepository
      * @param Folder $folder
      * @param string $searchWord
      * @param array $allowedFileExtension List of fileextensions to show
-     * @return File[]
+     * @return array $files
      */
     public function searchByName(Folder $folder, $searchWord, array $allowedFileExtension = [])
     {
