@@ -28,7 +28,7 @@ class FileRepositoryXclass extends FileRepository
      * @param Folder $folder
      * @param string $searchWord
      * @param array $allowedFileExtension List of fileextensions to show
-     * @return File[]
+     * @return array $files
      */
     public function searchByName(Folder $folder, $searchWord, array $allowedFileExtension = [])
     {
@@ -87,7 +87,7 @@ class FileRepositoryXclass extends FileRepository
         }
         $searchFieldsForWhere = array_intersect($searchFields, $availableFields);
         $records = [];
-        /** @var \TYPO3\CMS\Core\Database\Query\QueryBuilder $queryBuilder */
+        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('sys_file_metadata');
 

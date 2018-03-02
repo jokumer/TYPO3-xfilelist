@@ -22,11 +22,11 @@ $EM_CONF[$_EXTKEY] = [
     'author_company' => 'enobe.de',
     'CGLcompliance' => '',
     'CGLcompliance_note' => '',
-    'version' => '2.0.3',
+    'version' => '2.0.4',
     '_md5_values_when_last_written' => '',
     'constraints' => [
         'depends' => [
-            'typo3' => '8.9.0-8.9.99',
+            'typo3' => '8.7.0-8.7.99',
         ],
         'conflicts' => [],
         'suggests' => [],
