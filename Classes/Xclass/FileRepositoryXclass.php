@@ -55,8 +55,9 @@ class FileRepositoryXclass extends FileRepository
                 }
                 $nameParts = str_getcsv($searchWord, ' ');
                 foreach ($nameParts as $namePart) {
-                    if (strpos($fileRecord['name'], $namePart) !== false) {
-                        $files[] = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
+                    $fileObject = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
+                    if (!\in_array($fileObject, $files) && strpos($fileRecord['name'], $namePart) !== false) {
+                        $files[] = $fileObject;
                     }
                 }
             } catch (\TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException $ignoredException) {
