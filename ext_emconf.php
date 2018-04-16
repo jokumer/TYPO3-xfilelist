@@ -2,7 +2,7 @@
 
 $EM_CONF[$_EXTKEY] = [
     'title' => 'TYPO3 filelist',
-    'description' => 'Extends TYPO3 filelist and filebrowser for search within metadata, adds pagination to filebrowser',
+    'description' => 'Extends TYPO3 filelist and filebrowser for search within metadata, adds pagination and sorting to filebrowser',
     'category' => 'backend',
     'shy' => 0,
     'dependencies' => '',
@@ -22,7 +22,7 @@ $EM_CONF[$_EXTKEY] = [
     'author_company' => 'enobe.de',
     'CGLcompliance' => '',
     'CGLcompliance_note' => '',
-    'version' => '2.0.4',
+    'version' => '2.1.0',
     '_md5_values_when_last_written' => '',
     'constraints' => [
         'depends' => [
