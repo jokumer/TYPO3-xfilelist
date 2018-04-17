@@ -92,11 +92,10 @@ class FileRepositoryXclass extends FileRepository
     /**
      * Get file uids from sys_file_metadata records matching search word
      *
-     * @param integer $limit
      * @param string $searchWord
      * @return array
      */
-    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord, $limit=5000)
+    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord)
     {
         $availableFields = $this->getSysFileMetaDataTextFields();
         $extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['xfilelist']);
@@ -110,7 +109,6 @@ class FileRepositoryXclass extends FileRepository
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('sys_file_metadata');
-
         if (!empty($searchFieldsForWhere)) {
             $additionalWhereItems = array();
             foreach ($searchFieldsForWhere as $searchField) {
@@ -118,7 +116,6 @@ class FileRepositoryXclass extends FileRepository
                     $searchField,
                     $queryBuilder->createNamedParameter('%' . $searchWord . '%')
                 );
-                    //$searchField . ' LIKE \'%' . $searchWord . '%\'';
             }
             $res = $queryBuilder
                 ->select('file')
@@ -126,16 +123,6 @@ class FileRepositoryXclass extends FileRepository
                 ->orWhere(...$additionalWhereItems)
                 ->orderBy('file')
                 ->execute();
-            /*
-            $records = $this->getDatabaseConnection()->exec_SELECTgetRows(
-                'file',
-                'sys_file_metadata',
-                'sys_language_uid IN (0,-1) AND (' . implode(' OR ', $additionalWhereItems) . ')',
-                '',
-                '',
-                $limit,
-                'file'
-            );*/
             while ($row = $res->fetch()) {
                 $records[] = $row['file'];
             }

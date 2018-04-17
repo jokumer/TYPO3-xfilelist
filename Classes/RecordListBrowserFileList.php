@@ -389,7 +389,7 @@ class RecordListBrowserFileList extends AbstractRecordList
             $this->fieldArray = explode(',', $rowlist);
 
             // Add classes to table cells
-            $this->addElement_tdCssClass[$titleCol] = 'col-title·col-responsive';
+            $this->addElement_tdCssClass[$titleCol] = 'col-title col-responsive';
             $this->addElement_tdCssClass['_LOCALIZATION_'] = 'col-localizationa';
 
             $folders = ListUtility::resolveSpecialFolderNames($folders);
