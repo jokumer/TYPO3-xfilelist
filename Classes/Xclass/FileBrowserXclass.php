@@ -1,7 +1,7 @@
 <?php
 namespace Jokumer\Xfilelist\Xclass;
 
-use TYPO3\CMS\Xfilelist\RecordListBrowserFileList;
+use Jokumer\Xfilelist\RecordListBrowserFileList;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Recordlist\Browser\FileList;
@@ -27,12 +27,28 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
     public $pointer;
 
     /**
+     * Sorting field
+     *
+     * @var string
+     */
+    protected $sort;
+
+    /**
+     * Sorting direction
+     *
+     * @var bool
+     */
+    protected $sortRev;
+
+    /**
      * Initialize browser
      * 
      * @return void
      */
     public function initializeBrowser() {
         $this->pointer = GeneralUtility::_GP('pointer');
+        $this->sort = GeneralUtility::_GP('sort');
+        $this->sortRev = GeneralUtility::_GP('sortRev');
     }
 
     /**
@@ -53,8 +69,13 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
         // Get search box
         $outSearchField = GeneralUtility::makeInstance(FolderUtilityRenderer::class, $this)->getFileSearchField($this->searchWord);
         // Get file list, sets also class variables
-        if ($this->searchWord !== '') {
-            $files = $this->fileRepository->searchByName($folder, $this->searchWord, $extensionList);
+        if ($this->searchWord !== '' || $this->sort != '') {
+            $filters = [
+                'searchWord' => $this->searchWord,
+                'sort' => $this->sort,
+                'sortRev' => $this->sortRev
+            ];
+            $files = $this->fileRepository->getFilesInFolderByFilters($folder, $filters, $extensionList);
         } else {
             $files = $this->getFilesInFolder($folder, $extensionList);
         }
@@ -70,7 +91,7 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
 
     /**
      * Get file list
-     * Using a modified version of \TYPO3\CMS\Filelist\FileList CMS 7.6.15
+     * Using a modified version of \TYPO3\CMS\Filelist\FileList
      *
      * @param Folder $folder The folder path to render file list for
      * @param array $files Array of file objects
@@ -78,15 +99,14 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
      * @return string $code
      */
     public function getFilelist(Folder $folderObject, array $files, $thumbs = false) {
-        /** @var RecordListBrowserFileList; $fileList */
+        /** @var RecordListBrowserFileList $fileList */
         $fileList = GeneralUtility::makeInstance(RecordListBrowserFileList::class);
         $fileList->thumbs = $thumbs;
-        $fileList->start($folderObject, $this->pointer, false, false, false, true);
+        $fileList->start($folderObject, $this->pointer, $this->sort, $this->sortRev, false, true);
         $rowList = 'fileext,tstamp,size';
         $code = $fileList->getFilelist($files, $rowList);
         $this->elements = $fileList->getDataElements();
         $this->totalItems = $fileList->getTotalItemsCount();
         return $code;
     }
-
 }

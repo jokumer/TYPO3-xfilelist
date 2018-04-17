@@ -1,5 +1,6 @@
 <?php
-namespace TYPO3\CMS\Xfilelist;
+namespace Jokumer\Xfilelist;
+
 
 use TYPO3\CMS\Backend\Clipboard\Clipboard;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
@@ -25,7 +26,7 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
 
 /**
  * Class RecordListBrowserFileList
- * Copy from \TYPO3\CMS\Filelist\FileList CMS v7.6
+ * Copy from \TYPO3\CMS\Filelist\FileList
  * To use nearly same codebase from Filelist\Filelist also in RecordList\Browser\FileBrowser
  *
  * @package TYPO3
@@ -36,6 +37,19 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
  */
 class RecordListBrowserFileList extends AbstractRecordList
 {
+    /**
+     * The mode determines the main kind of output of the element browser.
+     *
+     * There are these options for values:
+     *  - "db" will allow you to browse for pages or records in the page tree for FormEngine select fields
+     *  - "file" will allow you to browse for files in the folder mounts for FormEngine file selections
+     *  - "folder" will allow you to browse for folders in the folder mounts for FormEngine folder selections
+     *  - Other options may be registered via extensions
+     *
+     * @var string
+     */
+    protected $mode;
+
     /**
      * Default Max items shown
      *
@@ -70,6 +84,20 @@ class RecordListBrowserFileList extends AbstractRecordList
      * @var bool
      */
     public $clickMenus = 1;
+
+    /**
+     * Pointer to listing
+     *
+     * @var int
+     */
+    public $pointer;
+
+    /**
+     * Search word
+     *
+     * @var string
+     */
+    public $searchWord = '';
 
     /**
      * The field to sort by
@@ -212,6 +240,10 @@ class RecordListBrowserFileList extends AbstractRecordList
                 $this->fixedL = $settings['fileListConfiguration_fixedL'];
             }
         }
+        $this->pointer = GeneralUtility::_GP('pointer');
+        $this->searchWord = GeneralUtility::_GP('searchWord');
+        $this->sort = GeneralUtility::_GP('sort');
+        $this->sortRev = GeneralUtility::_GP('sortRev');
     }
 
     /**
@@ -306,12 +338,12 @@ class RecordListBrowserFileList extends AbstractRecordList
                         $elToConfirm[$key] = $clipBoardElement->getName();
                     }
                     if ($addPasteButton) {
-                        $buttons['PASTE'] = '<a href="' . htmlspecialchars($this->clipObj->pasteUrl('_FILE', $folderObject->getCombinedIdentifier())) . '" onclick="return ' . htmlspecialchars($this->clipObj->confirmMsg('_FILE', $this->path, 'into', $elToConfirm)) . '" title="' . $this->getLanguageService()->getLL('clip_paste', true) . '">' . $this->iconFactory->getIcon('actions-document-paste-after', Icon::SIZE_SMALL)->render() . '</a>';
+                        $buttons['PASTE'] = '<a href="' . htmlspecialchars($this->clipObj->pasteUrl('_FILE', $folderObject->getCombinedIdentifier())) . '" onclick="return ' . htmlspecialchars($this->clipObj->confirmMsg('_FILE', $this->path, 'into', $elToConfirm)) . '" title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_paste')) . '">' . $this->iconFactory->getIcon('actions-document-paste-after', Icon::SIZE_SMALL)->render() . '</a>';
                     }
                 }
             }
         }
-        $buttons['refresh'] = '<a href="' . htmlspecialchars($this->listURL()) . '" title="' . $this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:labels.reload', true) . '">' . $this->iconFactory->getIcon('actions-refresh', Icon::SIZE_SMALL)->render() . '</a>';
+        $buttons['refresh'] = '<a href="' . htmlspecialchars($this->listURL()) . '" title="' . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:labels.reload')) . '">' . $this->iconFactory->getIcon('actions-refresh', Icon::SIZE_SMALL)->render() . '</a>';
         return [$buttons, $otherMarkers];
     }
 
@@ -446,7 +478,7 @@ class RecordListBrowserFileList extends AbstractRecordList
             // Header line is drawn
             $theData = [];
             foreach ($this->fieldArray as $v) {
-                if ($v == '_CLIPBOARD_' && $this->clipBoard) {
+                if ($v === '_CLIPBOARD_' && $this->clipBoard) {
                     $cells = [];
                     $table = '_FILE';
                     $elFromTable = $this->clipObj->elFromTable($table);
@@ -473,23 +505,23 @@ class RecordListBrowserFileList extends AbstractRecordList
                                     $elToConfirm
                                 )) . '"'
                                 . ' data-severity="warning"'
-                                . ' data-title="' . $this->getLanguageService()->getLL('clip_paste', true) . '"'
-                                . ' title="' . $this->getLanguageService()->getLL('clip_paste', true) . '">'
+                                . ' data-title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_paste')) . '"'
+                                . ' title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_paste')) . '">'
                                 . $this->iconFactory->getIcon('actions-document-paste-into', Icon::SIZE_SMALL)
                                     ->render()
                                 . '</a>';
                         }
                     }
                     if ($this->clipObj->current !== 'normal' && $iOut) {
-                        $cells[] = $this->linkClipboardHeaderIcon('<span title="' . $this->getLanguageService()->getLL('clip_selectMarked', true) . '">' . $this->iconFactory->getIcon('actions-edit-copy', Icon::SIZE_SMALL)->render() . '</span>', $table, 'setCB');
-                        $cells[] = $this->linkClipboardHeaderIcon('<span title="' . $this->getLanguageService()->getLL('clip_deleteMarked', true) . '">' . $this->iconFactory->getIcon('actions-edit-delete', Icon::SIZE_SMALL)->render(), $table, 'delete', $this->getLanguageService()->getLL('clip_deleteMarkedWarning'));
+                        $cells[] = $this->linkClipboardHeaderIcon('<span title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_selectMarked')) . '">' . $this->iconFactory->getIcon('actions-edit-copy', Icon::SIZE_SMALL)->render() . '</span>', $table, 'setCB');
+                        $cells[] = $this->linkClipboardHeaderIcon('<span title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_deleteMarked')) . '">' . $this->iconFactory->getIcon('actions-edit-delete', Icon::SIZE_SMALL)->render(), $table, 'delete', $this->getLanguageService()->getLL('clip_deleteMarkedWarning'));
                         $onClick = 'checkOffCB(' . GeneralUtility::quoteJSvalue(implode(',', $this->CBnames)) . ', this); return false;';
-                        $cells[] = '<a class="btn btn-default" rel="" href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . $this->getLanguageService()->getLL('clip_markRecords', true) . '">' . $this->iconFactory->getIcon('actions-document-select', Icon::SIZE_SMALL)->render() . '</a>';
+                        $cells[] = '<a class="btn btn-default" rel="" href="#" onclick="' . htmlspecialchars($onClick) . '" title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_markRecords')) . '">' . $this->iconFactory->getIcon('actions-document-select', Icon::SIZE_SMALL)->render() . '</a>';
                     }
                     $theData[$v] = implode('', $cells);
                 } else {
                     // Normal row:
-                    $theT = $this->linkWrapSort($this->getLanguageService()->getLL('c_' . $v, true), $this->folderObject->getCombinedIdentifier(), $v);
+                    $theT = $this->linkWrapSort(htmlspecialchars($this->getLanguageService()->getLL('c_' . $v)), $this->folderObject->getCombinedIdentifier(), $v);
                     $theData[$v] = $theT;
                 }
             }
@@ -535,7 +567,7 @@ class RecordListBrowserFileList extends AbstractRecordList
             $parentFolder = $currentFolder->getParentFolder();
             if ($parentFolder->getIdentifier() !== $currentFolder->getIdentifier() && $currentStorage->isWithinFileMountBoundaries($parentFolder)) {
                 $levelUp = $this->linkWrapDir(
-                    '<span title="' . $this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:labels.upOneLevel', true) . '">'
+                    '<span title="' . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:labels.upOneLevel')) . '">'
                     . $this->iconFactory->getIcon('actions-view-go-up', Icon::SIZE_SMALL)->render()
                     . '</span>',
                     $parentFolder
@@ -554,11 +586,11 @@ class RecordListBrowserFileList extends AbstractRecordList
     public function getFolderInfo()
     {
         if ($this->counter == 1) {
-            $fileLabel = $this->getLanguageService()->getLL('file', true);
+            $fileLabel = htmlspecialchars($this->getLanguageService()->getLL('file'));
         } else {
-            $fileLabel = $this->getLanguageService()->getLL('files', true);
+            $fileLabel = htmlspecialchars($this->getLanguageService()->getLL('files'));
         }
-        return $this->counter . ' ' . $fileLabel . ', ' . GeneralUtility::formatSize($this->totalbytes, $this->getLanguageService()->getLL('byteSizeUnits', true));
+        return $this->counter . ' ' . $fileLabel . ', ' . GeneralUtility::formatSize($this->totalbytes, htmlspecialchars($this->getLanguageService()->getLL('byteSizeUnits')));
     }
 
     /**
@@ -610,13 +642,13 @@ class RecordListBrowserFileList extends AbstractRecordList
                             } catch (InsufficientFolderAccessPermissionsException $e) {
                                 $numFiles = 0;
                             }
-                            $theData[$field] = $numFiles . ' ' . $this->getLanguageService()->getLL(($numFiles === 1 ? 'file' : 'files'), true);
+                            $theData[$field] = $numFiles . ' ' . htmlspecialchars($this->getLanguageService()->getLL(($numFiles === 1 ? 'file' : 'files')));
                             break;
                         case 'rw':
-                            $theData[$field] = '<strong class="text-danger">' . $this->getLanguageService()->getLL('read', true) . '</strong>' . (!$isWritable ? '' : '<strong class="text-danger">' . $this->getLanguageService()->getLL('write', true) . '</strong>');
+                            $theData[$field] = '<strong class="text-danger">' . htmlspecialchars($this->getLanguageService()->getLL('read')) . '</strong>' . (!$isWritable ? '' : '<strong class="text-danger">' . htmlspecialchars($this->getLanguageService()->getLL('write')) . '</strong>');
                             break;
                         case 'fileext':
-                            $theData[$field] = $this->getLanguageService()->getLL('folder', true);
+                            $theData[$field] = htmlspecialchars($this->getLanguageService()->getLL('folder'));
                             break;
                         case 'tstamp':
                             // @todo: FAL: how to get the mtime info -- $theData[$field] = \TYPO3\CMS\Backend\Utility\BackendUtility::date($theFile['tstamp']);
@@ -701,8 +733,17 @@ class RecordListBrowserFileList extends AbstractRecordList
             'target' => rawurlencode($this->folderObject->getCombinedIdentifier()),
             'imagemode' => $this->thumbs
         ];
-        if ($this->getSearchWord() !== '') {
-            $params['searchWord'] = $this->getSearchWord();
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'pointer')) && $this->pointer) {
+            $params['pointer'] = $this->pointer;
+        }
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'searchWord')) && $this->searchWord) {
+            $params['searchWord'] = $this->searchWord;
+        }
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'sort')) && $this->sort) {
+            $params['sort'] = $this->sort;
+        }
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'sortRev')) && $this->sortRev) {
+            $params['sortRev'] = $this->sortRev;
         }
         return GeneralUtility::linkThisScript($params);
     }
@@ -745,10 +786,10 @@ class RecordListBrowserFileList extends AbstractRecordList
             foreach ($this->fieldArray as $field) {
                 switch ($field) {
                     case 'size':
-                        $theData[$field] = GeneralUtility::formatSize($fileObject->getSize(), $this->getLanguageService()->getLL('byteSizeUnits', true));
+                        $theData[$field] = GeneralUtility::formatSize($fileObject->getSize(), htmlspecialchars($this->getLanguageService()->getLL('byteSizeUnits')));
                         break;
                     case 'rw':
-                        $theData[$field] = '' . (!$fileObject->checkActionPermission('read') ? ' ' : '<strong class="text-danger">' . $this->getLanguageService()->getLL('read', true) . '</strong>') . (!$fileObject->checkActionPermission('write') ? '' : '<strong class="text-danger">' . $this->getLanguageService()->getLL('write', true) . '</strong>');
+                        $theData[$field] = '' . (!$fileObject->checkActionPermission('read') ? ' ' : '<strong class="text-danger">' . htmlspecialchars($this->getLanguageService()->getLL('read')) . '</strong>') . (!$fileObject->checkActionPermission('write') ? '' : '<strong class="text-danger">' . htmlspecialchars($this->getLanguageService()->getLL('write')) . '</strong>');
                         break;
                     case 'fileext':
                         $theData[$field] = strtoupper($ext);
@@ -805,7 +846,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                             $theData[$field] = ' <div class="localisationData btn-group" data-fileid="' . $fileObject->getUid() . '"' .
                                 (empty($translations) ? ' style="display: none;"' : '') . '>' . $languageCode . '</div>';
                             $theData[$field] .= '<a class="btn btn-default filelist-translationToggler" data-fileid="' . $fileObject->getUid() . '">' .
-                                '<span title="' . $this->getLanguageService()->getLL('translateMetadata', true) . '">'
+                                '<span title="' . htmlspecialchars($this->getLanguageService()->getLL('translateMetadata')) . '">'
                                 . $this->iconFactory->getIcon('mimetypes-x-content-page-language-overlay', Icon::SIZE_SMALL)->render() . '</span>'
                                 . '</a>';
                         }
@@ -928,8 +969,8 @@ class RecordListBrowserFileList extends AbstractRecordList
         // For normal clipboard, add copy/cut buttons:
         if ($this->clipObj->current === 'normal') {
             $isSel = $this->clipObj->isSelected('_FILE', $md5);
-            $copyTitle = $this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:cm.copy', true);
-            $cutTitle = $this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:cm.cut', true);
+            $copyTitle = htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:cm.copy'));
+            $cutTitle = htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_core.xlf:cm.cut'));
             $copyIcon = $this->iconFactory->getIcon('actions-edit-copy', Icon::SIZE_SMALL)->render();
             $cutIcon = $this->iconFactory->getIcon('actions-edit-cut', Icon::SIZE_SMALL)->render();
 
@@ -970,8 +1011,8 @@ class RecordListBrowserFileList extends AbstractRecordList
                     . ' href="' . htmlspecialchars($this->clipObj->pasteUrl('_FILE', $fullIdentifier)) . '"'
                     . ' data-content="' . htmlspecialchars($this->clipObj->confirmMsgText('_FILE', $fullName, 'into', $elToConfirm)) . '"'
                     . ' data-severity="warning"'
-                    . ' data-title="' . $this->getLanguageService()->getLL('clip_pasteInto', true) . '"'
-                    . ' title="' . $this->getLanguageService()->getLL('clip_pasteInto', true) . '"'
+                    . ' data-title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_pasteInto')) . '"'
+                    . ' title="' . htmlspecialchars($this->getLanguageService()->getLL('clip_pasteInto')) . '"'
                     . '>'
                     . $this->iconFactory->getIcon('actions-document-paste-into', Icon::SIZE_SMALL)->render()
                     . '</a>';
@@ -1200,9 +1241,48 @@ class RecordListBrowserFileList extends AbstractRecordList
             $folderIcon = $this->iconFactory->getIconForResource($this->folderObject, Icon::SIZE_SMALL);
             $headerData['file'] = htmlspecialchars(GeneralUtility::fixed_lgd_cs($this->folderObject->getIdentifier(), $titleLen));
             if (intval($this->totalItems)) {
-                $linkImportSelection .= '<a href="#" class="btn btn-default" id="t3js-importSelection" title="' . $lang->getLL('importSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-import-t3d', Icon::SIZE_SMALL) . '</a>';
-                $linkToggleSelection .= '<a href="#" class="btn btn-default" id="t3js-toggleSelection" title="' . $lang->getLL('toggleSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-select', Icon::SIZE_SMALL) . '</a>';
-                $headerData['_CONTROL_'] = '<div class="btn-group">' . $linkImportSelection . $linkToggleSelection . '</div>';
+                if (!empty($this->fieldArray)) {
+                    foreach ($this->fieldArray as $field) {
+                        switch ($field) {
+                            // Filename - leave as is
+                            case 'file':
+                                break;
+                            // Controls - import and toggle
+                            case '_CONTROL_':
+                                $linkImportSelection = '<a href="#" class="btn btn-default" id="t3js-importSelection" title="' . $lang->getLL('importSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-import-t3d', Icon::SIZE_SMALL) . '</a>';
+                                $linkToggleSelection = '<a href="#" class="btn btn-default" id="t3js-toggleSelection" title="' . $lang->getLL('toggleSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-select', Icon::SIZE_SMALL) . '</a>';
+                                $headerData[$field] = '<div class="btn-group">' . $linkImportSelection . $linkToggleSelection . '</div>';
+                                break;
+                            // Sorting - ensures sorting fields only
+                            default:
+                                $allowedRowListSortingFieldsList = 'fileext,tstamp,size'; // Defined as $rowList in FileBrowserXclass->getFilelist()
+                                $allowedRowListSortingFields = GeneralUtility::trimExplode(',', $allowedRowListSortingFieldsList);
+                                if (in_array($field, $allowedRowListSortingFields)) {
+                                    // Get sorting direction
+                                    $sort = GeneralUtility::_GP('sort');
+                                    $sortRev = GeneralUtility::_GP('sortRev');
+                                    if ($field === $sort) {
+                                        if (!$sortRev) {
+                                            $sortRev = 1;
+                                            $sortArrow = $this->iconFactory->getIcon('status-status-sorting-light-asc', Icon::SIZE_SMALL)->render();
+                                        } else {
+                                            $sortRev = 0;
+                                            $sortArrow = $this->iconFactory->getIcon('status-status-sorting-light-desc', Icon::SIZE_SMALL)->render();
+                                        }
+                                    } else {
+                                        $sortRev = 0;
+                                        $sortArrow = '';
+                                    }
+                                    $headerData[$field] = '<a href="' . htmlspecialchars($this->listURL('', '-1', 'pointer,sort,sortRev') . '&sort=' . $field . '&sortRev=' . $sortRev . '&pointer=0') . '" title="'
+                                        . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:c_' . $field)) . '">'
+                                        . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:c_' . $field))
+                                        . $sortArrow
+                                        . '</a>';
+                                }
+                                break;
+                        }
+                    }
+                }
                 $hOut .= $this->addelement(1, $folderIcon, $headerData, '', '', '', 'th');
                 $iOut = '';
                 // No directories are added
@@ -1332,14 +1412,5 @@ class RecordListBrowserFileList extends AbstractRecordList
      */
     public function getTotalItemsCount() {
         return $this->totalItems;
-    }
-
-    /**
-     * Get searchWord
-     *
-     * @return array
-     */
-    public function getSearchWord() {
-        return (string)GeneralUtility::_GP('searchWord');
     }
 }

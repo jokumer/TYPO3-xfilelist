@@ -2,7 +2,7 @@
 
 $EM_CONF[$_EXTKEY] = [
     'title' => 'TYPO3 filelist',
-    'description' => 'Extends TYPO3 filelist and filebrowser for search within metadata, adds pagination to filebrowser',
+    'description' => 'Extends TYPO3 filelist and filebrowser for search within metadata, adds pagination and sorting to filebrowser',
     'category' => 'backend',
     'shy' => 0,
     'dependencies' => '',
@@ -17,12 +17,12 @@ $EM_CONF[$_EXTKEY] = [
     'modify_tables' => '',
     'clearCacheOnLoad' => 0,
     'lockType' => '',
-    'author' => 'Joerg kummer',
+    'author' => 'Joerg Kummer',
     'author_email' => 'typo3 et enobe dot de',
     'author_company' => 'enobe.de',
     'CGLcompliance' => '',
     'CGLcompliance_note' => '',
-    'version' => '1.0.4',
+    'version' => '1.1.0',
     '_md5_values_when_last_written' => '',
     'constraints' => [
         'depends' => [

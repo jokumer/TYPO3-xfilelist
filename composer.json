@@ -1,7 +1,7 @@
 {
   "name": "jokumer/xfilelist",
   "type": "typo3-cms-extension",
-  "description": "Extends TYPO3 filelist and filebrowser for search within metadata, adds pagination to filebrowser",
+  "description": "Extends TYPO3 filelist and filebrowser for search within metadata, adds pagination and sorting to filebrowser",
   "keywords": [
     "TYPO3",
     "extension"
