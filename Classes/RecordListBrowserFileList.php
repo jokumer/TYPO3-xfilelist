@@ -27,7 +27,7 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
 
 /**
  * Class RecordListBrowserFileList
- * Copy from \TYPO3\CMS\Filelist\FileList CMS v8.7
+ * Copy from \TYPO3\CMS\Filelist\FileList
  * To use nearly same codebase from Filelist\Filelist also in RecordList\Browser\FileBrowser
  *
  * @package TYPO3
@@ -78,6 +78,20 @@ class RecordListBrowserFileList extends AbstractRecordList
      * @var int
      */
     public $fixedL = 30;
+
+    /**
+     * Pointer to listing
+     *
+     * @var int
+     */
+    public $pointer;
+
+    /**
+     * Search word
+     *
+     * @var string
+     */
+    public $searchWord = '';
 
     /**
      * The field to sort by
@@ -225,6 +239,10 @@ class RecordListBrowserFileList extends AbstractRecordList
             }
         }
         $this->mode = GeneralUtility::_GP('mode');
+        $this->pointer = GeneralUtility::_GP('pointer');
+        $this->searchWord = GeneralUtility::_GP('searchWord');
+        $this->sort = GeneralUtility::_GP('sort');
+        $this->sortRev = GeneralUtility::_GP('sortRev');
     }
 
     /**
@@ -371,7 +389,7 @@ class RecordListBrowserFileList extends AbstractRecordList
             $this->fieldArray = explode(',', $rowlist);
 
             // Add classes to table cells
-            $this->addElement_tdCssClass[$titleCol] = 'col-title·col-responsive';
+            $this->addElement_tdCssClass[$titleCol] = 'col-title col-responsive';
             $this->addElement_tdCssClass['_LOCALIZATION_'] = 'col-localizationa';
 
             $folders = ListUtility::resolveSpecialFolderNames($folders);
@@ -638,9 +656,10 @@ class RecordListBrowserFileList extends AbstractRecordList
      * The URL however is not relative, otherwise GeneralUtility::sanitizeLocalUrl() would say that
      * the URL would be invalid
      *
-     * @param string $altId Alternative id value. Enter blank string for the current id ($this->id)
+     * @param string $altId
      * @param string $table Table name to display. Enter "-1" for the current table.
      * @param string $exclList Comma separated list of fields NOT to include ("sortField", "sortRev" or "firstElementNumber")
+     *
      * @return string URL
      */
     public function listURL($altId = '', $table = '-1', $exclList = '')
@@ -649,8 +668,17 @@ class RecordListBrowserFileList extends AbstractRecordList
             'target' => rawurlencode($this->folderObject->getCombinedIdentifier()),
             'imagemode' => $this->thumbs
         ];
-        if ($this->getSearchWord() !== '') {
-            $params['searchWord'] = $this->getSearchWord();
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'pointer')) && $this->pointer) {
+            $params['pointer'] = $this->pointer;
+        }
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'searchWord')) && $this->searchWord) {
+            $params['searchWord'] = $this->searchWord;
+        }
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'sort')) && $this->sort) {
+            $params['sort'] = $this->sort;
+        }
+        if ((!$exclList || !GeneralUtility::inList($exclList, 'sortRev')) && $this->sortRev) {
+            $params['sortRev'] = $this->sortRev;
         }
         return GeneralUtility::linkThisScript($params);
     }
@@ -1207,9 +1235,48 @@ class RecordListBrowserFileList extends AbstractRecordList
             $folderIcon = $this->iconFactory->getIconForResource($this->folderObject, Icon::SIZE_SMALL);
             $headerData['file'] = htmlspecialchars(GeneralUtility::fixed_lgd_cs($this->folderObject->getIdentifier(), $titleLen));
             if (intval($this->totalItems)) {
-                $linkImportSelection .= '<a href="#" class="btn btn-default" id="t3js-importSelection" title="' . $lang->getLL('importSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-import-t3d', Icon::SIZE_SMALL) . '</a>';
-                $linkToggleSelection .= '<a href="#" class="btn btn-default" id="t3js-toggleSelection" title="' . $lang->getLL('toggleSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-select', Icon::SIZE_SMALL) . '</a>';
-                $headerData['_CONTROL_'] = '<div class="btn-group">' . $linkImportSelection . $linkToggleSelection . '</div>';
+                if (!empty($this->fieldArray)) {
+                    foreach ($this->fieldArray as $field) {
+                        switch ($field) {
+                            // Filename - leave as is
+                            case 'file':
+                                break;
+                            // Controls - import and toggle
+                            case '_CONTROL_':
+                                $linkImportSelection = '<a href="#" class="btn btn-default" id="t3js-importSelection" title="' . $lang->getLL('importSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-import-t3d', Icon::SIZE_SMALL) . '</a>';
+                                $linkToggleSelection = '<a href="#" class="btn btn-default" id="t3js-toggleSelection" title="' . $lang->getLL('toggleSelection', true) . '">' . $this->iconFactory->getIcon('actions-document-select', Icon::SIZE_SMALL) . '</a>';
+                                $headerData[$field] = '<div class="btn-group">' . $linkImportSelection . $linkToggleSelection . '</div>';
+                                break;
+                            // Sorting - ensures sorting fields only
+                            default:
+                                $allowedRowListSortingFieldsList = 'fileext,tstamp,size'; // Defined as $rowList in FileBrowserXclass->getFilelist()
+                                $allowedRowListSortingFields = GeneralUtility::trimExplode(',', $allowedRowListSortingFieldsList);
+                                if (in_array($field, $allowedRowListSortingFields)) {
+                                    // Get sorting direction
+                                    $sort = GeneralUtility::_GP('sort');
+                                    $sortRev = GeneralUtility::_GP('sortRev');
+                                    if ($field === $sort) {
+                                        if (!$sortRev) {
+                                            $sortRev = 1;
+                                            $sortArrow = $this->iconFactory->getIcon('status-status-sorting-light-asc', Icon::SIZE_SMALL)->render();
+                                        } else {
+                                            $sortRev = 0;
+                                            $sortArrow = $this->iconFactory->getIcon('status-status-sorting-light-desc', Icon::SIZE_SMALL)->render();
+                                        }
+                                    } else {
+                                        $sortRev = 0;
+                                        $sortArrow = '';
+                                    }
+                                    $headerData[$field] = '<a href="' . htmlspecialchars($this->listURL('', '-1', 'pointer,sort,sortRev') . '&sort=' . $field . '&sortRev=' . $sortRev . '&pointer=0') . '" title="'
+                                        . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/Resources/Private/Language/locallang_mod_file_list.xlf:c_' . $field)) . '">'
+                                        . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/Resources/Private/Language/locallang_mod_file_list.xlf:c_' . $field))
+                                        . $sortArrow
+                                        . '</a>';
+                                }
+                                break;
+                        }
+                    }
+                }
                 $hOut .= $this->addelement(1, $folderIcon, $headerData, '', '', '', 'th');
                 $iOut = '';
                 // No directories are added
@@ -1339,14 +1406,5 @@ class RecordListBrowserFileList extends AbstractRecordList
      */
     public function getTotalItemsCount() {
         return $this->totalItems;
-    }
-
-    /**
-     * Get searchWord
-     *
-     * @return array
-     */
-    public function getSearchWord() {
-        return (string)GeneralUtility::_GP('searchWord');
     }
 }

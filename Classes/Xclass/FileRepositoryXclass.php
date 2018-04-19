@@ -23,7 +23,6 @@ class FileRepositoryXclass extends FileRepository
     /**
      * Search for files by name in a given folder
      * Overrides original method to search within metadata
-     * CMS7.6.0
      *
      * @param Folder $folder
      * @param string $searchWord
@@ -32,51 +31,71 @@ class FileRepositoryXclass extends FileRepository
      */
     public function searchByName(Folder $folder, $searchWord, array $allowedFileExtension = [])
     {
+        return $this->getFilesInFolderByFilters($folder, ['searchWord' => $searchWord], $allowedFileExtension);
+    }
+
+    /**
+     * Search for files by filter
+     * Filter can be of 'searchWord', 'sortingField' and 'sortingOrder'
+     *
+     * @param Folder $folder
+     * @param array $filters
+     * @param array $allowedFileExtension List of fileextensions to show
+     * @return array $files
+     */
+    public function getFilesInFolderByFilters(Folder $folder, array $filters, array $allowedFileExtension = [])
+    {
+        $sortingField = $filters['sort'] ? $filters['sort'] : '';
+        $sortingReverse = $filters['sortRev'] ? 1 : 0;
+
         /** @var \TYPO3\CMS\Core\Resource\ResourceFactory $fileFactory */
         $fileFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Resource\ResourceFactory::class);
 
         $folders = $folder->getStorage()->getFoldersInFolder($folder, 0, 0, true, true);
         $folders[$folder->getIdentifier()] = $folder;
 
-        $fileRecords = $this->getFileIndexRepository()->findByFolders($folders, false);
+        $files = $folder->getFiles(0, 0, Folder::FILTER_MODE_USE_OWN_AND_STORAGE_FILTERS, true, trim($sortingField), (bool)$sortingReverse);
 
-        $fileUidsFromMetaDataRecordsMatchingSearchWord = $this->getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord);
-
-        $files = [];
-        foreach ($fileRecords as $fileRecord) {
-            try {
-                if (!empty($allowedFileExtension)
-                    && !in_array($fileRecord['extension'], $allowedFileExtension)
-                ) {
+        if ($filters['searchWord']) {
+            $filesMatchingSearchWord = [];
+            $fileUidsFromMetaDataRecordsMatchingSearchWord = $this->getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($filters['searchWord']);
+            foreach ($files as $file) {
+                try {
+                    if (!empty($allowedFileExtension)
+                        && !in_array($file->getExtension(), $allowedFileExtension)
+                    ) {
+                        continue;
+                    }
+                    if (!empty($fileUidsFromMetaDataRecordsMatchingSearchWord)
+                        && in_array($file->getUid(), $fileUidsFromMetaDataRecordsMatchingSearchWord)
+                    ) {
+                        $filesMatchingSearchWord[] = $fileFactory->getFileObject($file->getUid(), $file->getProperties());
+                    }
+                    $nameParts = str_getcsv($filters['searchWord'], ' ');
+                    foreach ($nameParts as $namePart) {
+                        $fileObject = $fileFactory->getFileObject($file->getUid(), $file->getProperties());
+                        // Find matches AND prevent prevent duplicate results
+                        if (strpos($file->getName(), $namePart) !== false && !\in_array($fileObject, $filesMatchingSearchWord)) {
+                            $filesMatchingSearchWord[] = $fileObject;
+                        }
+                    }
+                } catch (\TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException $ignoredException) {
                     continue;
                 }
-                if (!empty($fileUidsFromMetaDataRecordsMatchingSearchWord)
-                    && in_array($fileRecord['uid'], $fileUidsFromMetaDataRecordsMatchingSearchWord)
-                ) {
-                    $files[] = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
-                }
-                $nameParts = str_getcsv($searchWord, ' ');
-                foreach ($nameParts as $namePart) {
-                    $fileObject = $fileFactory->getFileObject($fileRecord['uid'], $fileRecord);
-                    if (!\in_array($fileObject, $files) && strpos($fileRecord['name'], $namePart) !== false) {
-                        $files[] = $fileObject;
-                    }
-                }
-            } catch (\TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException $ignoredException) {
-                continue;
             }
+            $files = $filesMatchingSearchWord;
         }
+
         return $files;
     }
 
     /**
      * Get file uids from sys_file_metadata records matching search word
      *
-     * @param integer $limit
      * @param string $searchWord
      * @return array
      */
-    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord, $limit=5000)
+    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord)
     {
         $availableFields = $this->getSysFileMetaDataTextFields();
         $extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['xfilelist']);
@@ -90,7 +109,6 @@ class FileRepositoryXclass extends FileRepository
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('sys_file_metadata');
-
         if (!empty($searchFieldsForWhere)) {
             $additionalWhereItems = array();
             foreach ($searchFieldsForWhere as $searchField) {
@@ -98,7 +116,6 @@ class FileRepositoryXclass extends FileRepository
                     $searchField,
                     $queryBuilder->createNamedParameter('%' . $searchWord . '%')
                 );
-                    //$searchField . ' LIKE \'%' . $searchWord . '%\'';
             }
             $res = $queryBuilder
                 ->select('file')
@@ -106,16 +123,6 @@ class FileRepositoryXclass extends FileRepository
                 ->orWhere(...$additionalWhereItems)
                 ->orderBy('file')
                 ->execute();
-            /*
-            $records = $this->getDatabaseConnection()->exec_SELECTgetRows(
-                'file',
-                'sys_file_metadata',
-                'sys_language_uid IN (0,-1) AND (' . implode(' OR ', $additionalWhereItems) . ')',
-                '',
-                '',
-                $limit,
-                'file'
-            );*/
             while ($row = $res->fetch()) {
                 $records[] = $row['file'];
             }

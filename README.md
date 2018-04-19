@@ -1,7 +1,8 @@
 # TYPO3 EXT:xfilelist
 
 TYPO3 extension to extend the default file search within metadata for TYPO3 backend modul filelist and the TYPO3 filebrowser.
-Also adding pagination for TYPO3 filebrowser in list and search view. Amount of list entries is configurable.
+Adds pagination for TYPO3 filelist and filebrowser, where amount of list entries is configurable.
+Adds missing sorting for TYPO3 filebrowser.
 
 ## Installation
 
@@ -38,10 +39,14 @@ See also
 
 ## Pagination
 
-Pagination is available in filebrowser for list and search view. In backend modul filelist for list view only, not for search view.
+Pagination is available in filelist and filebrowser. In backend modul filelist for list view only, not for search view.
 
 Amount of entries in list can be configured in the extension-configuration via extension-manager (*fileListConfiguration_iLimit*).
 Default is: 40
 
 See also
 - https://forge.typo3.org/issues/64764
+
+## Sorting
+
+Sorting is already available in filelist. For filebrowser this extension supports sorting for file-type, modification-date and size.
