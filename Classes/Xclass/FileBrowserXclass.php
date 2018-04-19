@@ -41,6 +41,15 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
     protected $sortRev;
 
     /**
+     * Loads additional JavaScripts
+     */
+    protected function initialize()
+    {
+        parent::initialize();
+        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Xfilelist/FileSearch');
+    }
+
+    /**
      * Initialize browser
      * 
      * @return void
