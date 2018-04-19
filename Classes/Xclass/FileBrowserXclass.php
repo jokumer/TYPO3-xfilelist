@@ -64,8 +64,10 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
         if (!$folder->checkActionPermission('read')) {
             return '';
         }
+        // Init
         $this->initializeBrowser();
         $lang = $this->getLanguageService();
+        $extensionList = !empty($extensionList) && $extensionList[0] === '*' ? [] : $extensionList; // Issue #6
         // Get search box
         $outSearchField = GeneralUtility::makeInstance(FolderUtilityRenderer::class, $this)->getFileSearchField($this->searchWord);
         // Get file list, sets also class variables
