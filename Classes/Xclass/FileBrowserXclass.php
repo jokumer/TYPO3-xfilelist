@@ -114,7 +114,7 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
         $fileList = GeneralUtility::makeInstance(RecordListBrowserFileList::class);
         $fileList->thumbs = $thumbs;
         $fileList->start($folderObject, $this->pointer, $this->sort, $this->sortRev, false, true);
-        $rowList = 'fileext,tstamp,size';
+        $rowList = 'fileext,modification_date,size';
         $code = $fileList->getFilelist($files, $rowList);
         $this->elements = $fileList->getDataElements();
         $this->totalItems = $fileList->getTotalItemsCount();
