@@ -283,7 +283,7 @@ class RecordListBrowserFileList extends AbstractRecordList
      */
     public function generateList()
     {
-        $this->HTMLcode .= $this->getTable('fileext,tstamp,size,rw,_REF_');
+        $this->HTMLcode .= $this->getTable('fileext,modification_date,size,rw,_REF_');
     }
 
     /**
@@ -650,8 +650,8 @@ class RecordListBrowserFileList extends AbstractRecordList
                         case 'fileext':
                             $theData[$field] = htmlspecialchars($this->getLanguageService()->getLL('folder'));
                             break;
-                        case 'tstamp':
-                            // @todo: FAL: how to get the mtime info -- $theData[$field] = \TYPO3\CMS\Backend\Utility\BackendUtility::date($theFile['tstamp']);
+                        case 'modification_date':
+                            // @todo: FAL: how to get the mtime info -- $theData[$field] = \TYPO3\CMS\Backend\Utility\BackendUtility::date($theFile['modification_date']);
                             $theData[$field] = '-';
                             break;
                         case 'file':
@@ -794,7 +794,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                     case 'fileext':
                         $theData[$field] = strtoupper($ext);
                         break;
-                    case 'tstamp':
+                    case 'modification_date':
                         $theData[$field] = BackendUtility::date($fileObject->getModificationTime());
                         break;
                     case '_CONTROL_':
@@ -1255,7 +1255,7 @@ class RecordListBrowserFileList extends AbstractRecordList
                                 break;
                             // Sorting - ensures sorting fields only
                             default:
-                                $allowedRowListSortingFieldsList = 'fileext,tstamp,size'; // Defined as $rowList in FileBrowserXclass->getFilelist()
+                                $allowedRowListSortingFieldsList = 'fileext,modification_date,size'; // Defined as $rowList in FileBrowserXclass->getFilelist()
                                 $allowedRowListSortingFields = GeneralUtility::trimExplode(',', $allowedRowListSortingFieldsList);
                                 if (in_array($field, $allowedRowListSortingFields)) {
                                     // Get sorting direction
@@ -1273,11 +1273,8 @@ class RecordListBrowserFileList extends AbstractRecordList
                                         $sortRev = 0;
                                         $sortArrow = '';
                                     }
-                                    $headerData[$field] = '<a href="' . htmlspecialchars($this->listURL('', '-1', 'pointer,sort,sortRev') . '&sort=' . $field . '&sortRev=' . $sortRev . '&pointer=0') . '" title="'
-                                        . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:c_' . $field)) . '">'
-                                        . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:c_' . $field))
-                                        . $sortArrow
-                                        . '</a>';
+                                    $title = htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:lang/locallang_mod_file_list.xlf:c_' . (($field === 'modification_date') ? 'tstamp' : $field)));
+                                    $headerData[$field] = '<a href="' . htmlspecialchars($this->listURL('', '-1', 'pointer,sort,sortRev') . '&sort=' . $field . '&sortRev=' . $sortRev . '&pointer=0') . '" title="' . $title . '">' . $title . $sortArrow . '</a>';
                                 }
                                 break;
                         }
