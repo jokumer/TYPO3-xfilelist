@@ -2,7 +2,7 @@
 
 TYPO3 extension to extend the default TYPO3 backend modul filelist and the TYPO3 filebrowser.
 * search within metadata for filelist and filebrowser
-* pagination for filelist and filebrowser on search
+* pagination for filebrowser (also on search)
 * file infos in filebrowser like in filelist
 * sorting by file infos in filebrowser like in filelist
 * clear search in filebrowser like in filelist
