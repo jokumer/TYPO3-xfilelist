@@ -4,7 +4,7 @@ namespace Jokumer\Xfilelist\Xclass;
 use Jokumer\Xfilelist\RecordListBrowserFileList;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Recordlist\Browser\FileList;
+use TYPO3\CMS\Recordlist\Browser\FileBrowser;
 use TYPO3\CMS\Recordlist\View\FolderUtilityRenderer;
 
 /**
@@ -12,12 +12,16 @@ use TYPO3\CMS\Recordlist\View\FolderUtilityRenderer;
  *
  * @package TYPO3
  * @subpackage tx_xfilelist
- * @author 2017 J.Kummer <typo3 et enobe dot de>, enobe.de
+ * @author 2017-2019 J.Kummer
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
-class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
+class FileBrowserXclass extends FileBrowser
 {
+    /**
+     * @var FileRepositoryXclass
+     */
+    protected $fileRepository;
 
     /**
      * Pointer to listing
@@ -51,13 +55,16 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
 
     /**
      * Initialize browser
-     * 
+     *
      * @return void
      */
-    public function initializeBrowser() {
+    public function initializeBrowser()
+    {
         $this->pointer = GeneralUtility::_GP('pointer');
         $this->sort = GeneralUtility::_GP('sort');
         $this->sortRev = GeneralUtility::_GP('sortRev');
+        // Instantiate extended FileRepository
+        $this->fileRepository = GeneralUtility::makeInstance(FileRepositoryXclass::class);
     }
 
     /**
@@ -78,6 +85,7 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
         $lang = $this->getLanguageService();
         $extensionList = !empty($extensionList) && $extensionList[0] === '*' ? [] : $extensionList; // Issue #6
         // Get search box
+        /** @var FolderUtilityRenderer $outSearchField */
         $outSearchField = GeneralUtility::makeInstance(FolderUtilityRenderer::class, $this)->getFileSearchField($this->searchWord);
         // Get file list, sets also class variables
         if ($this->searchWord !== '' || $this->sort != '') {
@@ -109,8 +117,9 @@ class FileBrowserXclass extends \TYPO3\CMS\Recordlist\Browser\FileBrowser
      * @param bool $thumbs Whether to show thumbnails or not. If set, thumbnails are shown.
      * @return string $code
      */
-    public function getFilelist(Folder $folderObject, array $files, $thumbs = false) {
-        /** @var RecordListBrowserFileList $fileList */
+    public function getFilelist(Folder $folderObject, array $files, $thumbs = false)
+    {
+        /** @var RecordListBrowserFileList; $fileList */
         $fileList = GeneralUtility::makeInstance(RecordListBrowserFileList::class);
         $fileList->thumbs = $thumbs;
         $fileList->start($folderObject, $this->pointer, $this->sort, $this->sortRev, false, true);

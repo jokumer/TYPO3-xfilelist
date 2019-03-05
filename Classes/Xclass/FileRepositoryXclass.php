@@ -2,9 +2,12 @@
 namespace Jokumer\Xfilelist\Xclass;
 
 use Doctrine\DBAL\Query\QueryBuilder;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Resource\Folder;
+use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -13,13 +16,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *
  * @package TYPO3
  * @subpackage tx_xfilelist
- * @author 2017 J.Kummer <typo3 et enobe dot de>, enobe.de
+ * @author 2017-2019 J.Kummer
+ * @author 2018 T.Karliczek
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
 class FileRepositoryXclass extends FileRepository
 {
-
     /**
      * Search for files by name in a given folder
      * Overrides original method to search within metadata
@@ -31,7 +34,7 @@ class FileRepositoryXclass extends FileRepository
      */
     public function searchByName(Folder $folder, $searchWord, array $allowedFileExtension = [])
     {
-        return $this->getFilesInFolderByFilters($folder, ['searchWord' => $searchWord], $allowedFileExtension);
+        return $this->getFilesInFolderByFilters($folder, ['searchWord' => trim($searchWord)], $allowedFileExtension);
     }
 
     /**
@@ -47,15 +50,11 @@ class FileRepositoryXclass extends FileRepository
     {
         $sortingField = $filters['sort'] ? $filters['sort'] : '';
         $sortingReverse = $filters['sortRev'] ? 1 : 0;
-
-        /** @var \TYPO3\CMS\Core\Resource\ResourceFactory $fileFactory */
-        $fileFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Resource\ResourceFactory::class);
-
+        /** @var ResourceFactory $fileFactory */
+        $fileFactory = GeneralUtility::makeInstance(ResourceFactory::class);
         $folders = $folder->getStorage()->getFoldersInFolder($folder, 0, 0, true, true);
         $folders[$folder->getIdentifier()] = $folder;
-
         $files = $folder->getFiles(0, 0, Folder::FILTER_MODE_USE_OWN_AND_STORAGE_FILTERS, true, trim($sortingField), (bool)$sortingReverse);
-
         if ($filters['searchWord']) {
             $filesMatchingSearchWord = [];
             $fileUidsFromMetaDataRecordsMatchingSearchWord = $this->getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($filters['searchWord']);
@@ -75,34 +74,35 @@ class FileRepositoryXclass extends FileRepository
                     foreach ($nameParts as $namePart) {
                         $fileObject = $fileFactory->getFileObject($file->getUid(), $file->getProperties());
                         // Find matches AND prevent prevent duplicate results
-                        if (strpos($file->getName(), $namePart) !== false && !\in_array($fileObject, $filesMatchingSearchWord)) {
+                        if (strpos($file->getName(), $namePart) !== false && !in_array($fileObject, $filesMatchingSearchWord)) {
                             $filesMatchingSearchWord[] = $fileObject;
                         }
                     }
-                } catch (\TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException $ignoredException) {
+                } catch (FileDoesNotExistException $ignoredException) {
                     continue;
                 }
             }
             $files = $filesMatchingSearchWord;
         }
-
         return $files;
     }
 
     /**
      * Get file uids from sys_file_metadata records matching search word
      *
+     * @param integer $limit
      * @param string $searchWord
      * @return array
      */
-    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord)
+    protected function getFileUidsFromSysFileMetaDataRecordsMatchingSearchWord($searchWord, $limit=5000)
     {
         $availableFields = $this->getSysFileMetaDataTextFields();
-        $extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['xfilelist']);
-        if (isset($extConf['sysFileMetadataSearchFields'])) {
-            $searchFields = GeneralUtility::trimExplode(',', $extConf['sysFileMetadataSearchFields']);
+        /** @var ExtensionConfiguration $extensionConfiguration */
+        $extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('xfilelist');
+        if (isset($extensionConfiguration['sysFileMetadataSearchFields'])) {
+            $searchFields = GeneralUtility::trimExplode(',', $extensionConfiguration['sysFileMetadataSearchFields']);
         } else {
-            $searchFields = array('title', 'description', 'keywords', 'caption');
+            $searchFields = ['title', 'description', 'alternative'];
         }
         $searchFieldsForWhere = array_intersect($searchFields, $availableFields);
         $records = [];
@@ -110,7 +110,7 @@ class FileRepositoryXclass extends FileRepository
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('sys_file_metadata');
         if (!empty($searchFieldsForWhere)) {
-            $additionalWhereItems = array();
+            $additionalWhereItems = [];
             foreach ($searchFieldsForWhere as $searchField) {
                 $additionalWhereItems[] = $queryBuilder->expr()->like(
                     $searchField,
@@ -130,7 +130,7 @@ class FileRepositoryXclass extends FileRepository
         if (is_array($records)) {
             return $records;
         } else {
-            return array();
+            return [];
         }
     }
 
@@ -142,20 +142,42 @@ class FileRepositoryXclass extends FileRepository
      */
     protected function getSysFileMetaDataTextFields()
     {
-        // default text fields by core v7.6.0
-        $fields = array(
+        // default text fields by core v9.5
+        $fields = [
             'title',
             'description',
             'alternative'
-        );
-        if (ExtensionManagementUtility::isLoaded('filemetadata')) { // v7.6.0
-            array_push($fields, 'status', 'keywords', 'caption', 'creator_tool', 'download_name',
-                'creator', 'publisher', 'source', 'copyright', 'location_country', 'location_region',
-                'location_city', 'note', 'color_space', 'language'
+        ];
+        if (ExtensionManagementUtility::isLoaded('filemetadata')) { // v9.5
+            array_push(
+                $fields,
+                'caption',
+                'color_space',
+                'copyright',
+                'creator',
+                'creator_tool',
+                'download_name',
+                'keywords',
+                'language',
+                'location_city',
+                'location_country',
+                'location_region',
+                'note',
+                'publisher',
+                'source',
+                'status',
+                'unit'
             );
+
         }
-        if (ExtensionManagementUtility::isLoaded('metadata')) { // v2.2.3
-            array_push($fields, 'copyright_notice', 'shutter_speed_value', 'iso_speed_ratings', 'camera_model');
+        if (ExtensionManagementUtility::isLoaded('metadata')) { // v2.2.5
+            array_push(
+                $fields,
+                'camera_model',
+                'copyright_notice',
+                'iso_speed_ratings',
+                'shutter_speed_value'
+            );
         }
         return $fields;
     }

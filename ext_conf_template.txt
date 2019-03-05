@@ -8,4 +8,4 @@ fileListConfiguration_iLimit = 40
 fileListConfiguration_fixedL = 30
 
 # cat=Filesearch/1; type=string; label=Search fields for metadata: Specify commaseparated list of fields from table sys_file_metadata to include in file search.
-sysFileMetadataSearchFields = title,description,keywords,caption
+sysFileMetadataSearchFields = title,description,alternative
