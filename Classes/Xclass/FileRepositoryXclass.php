@@ -74,7 +74,7 @@ class FileRepositoryXclass extends FileRepository
                     foreach ($nameParts as $namePart) {
                         $fileObject = $fileFactory->getFileObject($file->getUid(), $file->getProperties());
                         // Find matches AND prevent prevent duplicate results
-                        if (strpos($file->getName(), $namePart) !== false && !in_array($fileObject, $filesMatchingSearchWord)) {
+                        if (stripos($file->getName(), $namePart) !== false && !in_array($fileObject, $filesMatchingSearchWord)) {
                             $filesMatchingSearchWord[] = $fileObject;
                         }
                     }
