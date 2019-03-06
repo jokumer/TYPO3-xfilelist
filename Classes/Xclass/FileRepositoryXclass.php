@@ -175,6 +175,7 @@ class FileRepositoryXclass extends FileRepository
                 $fields,
                 'camera_model',
                 'copyright_notice',
+                'credit',
                 'iso_speed_ratings',
                 'shutter_speed_value'
             );
