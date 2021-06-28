@@ -12,7 +12,7 @@ use TYPO3\CMS\Recordlist\View\FolderUtilityRenderer;
  *
  * @package TYPO3
  * @subpackage tx_xfilelist
- * @author 2017-2019 J.Kummer
+ * @author J.Kummer
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
@@ -102,7 +102,7 @@ class FileBrowserXclass extends FileBrowser
         // Get checkbox 'show thumbs'
         $outBulkSelector = $this->getBulkSelector(count($this->elements));
         // Get output
-        $out = '<h3>' . $lang->getLL('files', true) . ' ' . $this->totalItems . ':</h3>';
+        $out = '<h3>' . htmlspecialchars($lang->getLL('files')) . ' ' . $this->totalItems . ':</h3>';
         $out .= $outSearchField;
         $out .= '<div id="filelist">' . $outBulkSelector . $outFilelist . '</div>';
         return $out;

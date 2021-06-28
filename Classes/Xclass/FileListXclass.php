@@ -11,7 +11,7 @@ use TYPO3\CMS\Filelist\FileList;
  *
  * @package TYPO3
  * @subpackage tx_xfilelist
- * @author 2017-2019 J.Kummer
+ * @author J.Kummer
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
@@ -22,7 +22,7 @@ class FileListXclass extends FileList
      *
      * @param FileListController $fileListController
      */
-    public function __construct(FileListController $fileListController)
+    public function __construct(FileListController $fileListController = null)
     {
         parent::__construct($fileListController);
         $extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('xfilelist');

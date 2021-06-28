@@ -2,6 +2,7 @@
 namespace Jokumer\Xfilelist;
 
 use Jokumer\Xfilelist\AbstractRecordList;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Clipboard\Clipboard;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -33,7 +34,7 @@ use TYPO3\CMS\Filelist\Controller\FileListController;
  *
  * @package TYPO3
  * @subpackage tx_xfilelist
- * @author 2017-2019 J.Kummer
+ * @author J.Kummer
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
@@ -224,7 +225,7 @@ class RecordListBrowserFileList extends AbstractRecordList
     {
         parent::__construct();
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
-        $modTSconfig = BackendUtility::getModTSconfig(0, 'options.file_list');
+        $modTSconfig['properties'] = BackendUtility::getPagesTSconfig($pid)['options.']['file_list.'] ?? [];
         if (!empty($modTSconfig['properties']['filesPerPage'])) {
             $this->iLimit = MathUtility::forceIntegerInRange($modTSconfig['properties']['filesPerPage'], 1);
         }
@@ -272,7 +273,7 @@ class RecordListBrowserFileList extends AbstractRecordList
         // Setting the maximum length of the filenames to the user's settings or minimum 30 (= $this->fixedL)
         $this->fixedL = max($this->fixedL, $this->getBackendUser()->uc['titleLen']);
         $this->getLanguageService()->includeLLFile('EXT:core/Resources/Private/Language/locallang_common.xlf');
-        $this->resourceFactory = ResourceFactory::getInstance();
+        $this->resourceFactory = GeneralUtility::makeInstance(ResourceFactory::class);
     }
 
     /**
@@ -621,7 +622,8 @@ class RecordListBrowserFileList extends AbstractRecordList
      */
     public function linkWrapDir($title, Folder $folderObject)
     {
-        $href = BackendUtility::getModuleUrl('file_FilelistList', ['id' => $folderObject->getCombinedIdentifier()]);
+        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+        $href = (string)$uriBuilder->buildUriFromRoute('file_FilelistList', ['id' => $folderObject->getCombinedIdentifier()]);
         $onclick = ' onclick="' . htmlspecialchars(('top.document.getElementsByName("navigation")[0].contentWindow.Tree.highlightActiveItem("file","folder' . GeneralUtility::md5int($folderObject->getCombinedIdentifier()) . '_"+top.fsMod.currentBank)')) . '"';
         // Sometimes $code contains plain HTML tags. In such a case the string should not be modified!
         if ((string)$title === strip_tags($title)) {
@@ -779,7 +781,8 @@ class RecordListBrowserFileList extends AbstractRecordList
                                         'returnUrl' => $this->listURL()
                                     ];
                                     $flagButtonIcon = $this->iconFactory->getIcon($flagIcon, Icon::SIZE_SMALL, 'overlay-edit')->render();
-                                    $url = BackendUtility::getModuleUrl('record_edit', $urlParameters);
+                                    $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+                                    $url = (string)$uriBuilder->buildUriFromRoute('record_edit', $urlParameters);
                                     $languageCode .= '<a href="' . htmlspecialchars($url) . '" class="btn btn-default" title="' . $title . '">'
                                         . $flagButtonIcon . '</a>';
                                 } else {
@@ -787,8 +790,9 @@ class RecordListBrowserFileList extends AbstractRecordList
                                         'justLocalized' => 'sys_file_metadata:' . $metaDataRecord['uid'] . ':' . $languageId,
                                         'returnUrl' => $this->listURL()
                                     ];
-                                    $returnUrl = BackendUtility::getModuleUrl('record_edit', $parameters);
-                                    $href = BackendUtility::getLinkToDataHandlerAction(
+                                    $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+                                    $returnUrl = (string)$uriBuilder->buildUriFromRoute('record_edit', $parameters);
+                                    $href = (string)$uriBuilder->buildUriFromRoute(
                                         '&cmd[sys_file_metadata][' . $metaDataRecord['uid'] . '][localize]=' . $languageId,
                                         $returnUrl
                                     );
@@ -916,7 +920,8 @@ class RecordListBrowserFileList extends AbstractRecordList
             $params['SET']['reverse'] = 0;
             $sortArrow = '';
         }
-        $href = BackendUtility::getModuleUrl('file_FilelistList', $params);
+        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+        $href = (string)$uriBuilder->buildUriFromRoute('file_FilelistList', $params);
         return '<a href="' . htmlspecialchars($href) . '">' . $code . ' ' . $sortArrow . '</a>';
     }
 
@@ -1006,7 +1011,8 @@ class RecordListBrowserFileList extends AbstractRecordList
 
         // Edit file content (if editable)
         if ($fileOrFolderObject instanceof File && $fileOrFolderObject->checkActionPermission('write') && GeneralUtility::inList($GLOBALS['TYPO3_CONF_VARS']['SYS']['textfile_ext'], $fileOrFolderObject->getExtension())) {
-            $url = BackendUtility::getModuleUrl('file_edit', ['target' => $fullIdentifier]);
+            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+            $url = (string)$uriBuilder->buildUriFromRoute('file_edit', ['target' => $fullIdentifier]);
             $editOnClick = 'top.list_frame.location.href=' . GeneralUtility::quoteJSvalue($url) . '+\'&returnUrl=\'+top.rawurlencode(top.list_frame.document.location.pathname+top.list_frame.document.location.search);return false;';
             $cells['edit'] = '<a href="#" class="btn btn-default" onclick="' . htmlspecialchars($editOnClick) . '" title="' . $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.editcontent') . '">'
                 . $this->iconFactory->getIcon('actions-page-open', Icon::SIZE_SMALL)->render()
@@ -1026,7 +1032,8 @@ class RecordListBrowserFileList extends AbstractRecordList
                 ],
                 'returnUrl' => $this->listURL()
             ];
-            $url = BackendUtility::getModuleUrl('record_edit', $urlParameters);
+            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+            $url = (string)$uriBuilder->buildUriFromRoute('record_edit', $urlParameters);
             $title = htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.editMetadata'));
             $cells['metadata'] = '<a class="btn btn-default" href="' . htmlspecialchars($url) . '" title="' . $title . '">' . $this->iconFactory->getIcon('actions-open', Icon::SIZE_SMALL)->render() . '</a>';
         }
@@ -1046,14 +1053,21 @@ class RecordListBrowserFileList extends AbstractRecordList
 
         // replace file
         if ($fileOrFolderObject instanceof File && $fileOrFolderObject->checkActionPermission('replace')) {
-            $url = BackendUtility::getModuleUrl('file_replace', ['target' => $fullIdentifier, 'uid' => $fileOrFolderObject->getUid()]);
+            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+            $url = (string)$uriBuilder->buildUriFromRoute(
+                'file_replace', [
+                    'target' => $fullIdentifier,
+                    'uid' => $fileOrFolderObject->getUid()
+                ]
+            );
             $replaceOnClick = 'top.list_frame.location.href = ' . GeneralUtility::quoteJSvalue($url) . '+\'&returnUrl=\'+top.rawurlencode(top.list_frame.document.location.pathname+top.list_frame.document.location.search);return false;';
             $cells['replace'] = '<a href="#" class="btn btn-default" onclick="' . $replaceOnClick . '"  title="' . $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.replace') . '">' . $this->iconFactory->getIcon('actions-edit-replace', Icon::SIZE_SMALL)->render() . '</a>';
         }
 
         // rename the file
         if ($fileOrFolderObject->checkActionPermission('rename')) {
-            $url = BackendUtility::getModuleUrl('file_rename', ['target' => $fullIdentifier]);
+            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+            $url = (string)$uriBuilder->buildUriFromRoute('file_rename', ['target' => $fullIdentifier]);
             $renameOnClick = 'top.list_frame.location.href = ' . GeneralUtility::quoteJSvalue($url) . '+\'&returnUrl=\'+top.rawurlencode(top.list_frame.document.location.pathname+top.list_frame.document.location.search);return false;';
             $cells['rename'] = '<a href="#" class="btn btn-default" onclick="' . htmlspecialchars($renameOnClick) . '"  title="' . $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.rename') . '">' . $this->iconFactory->getIcon('actions-edit-rename', Icon::SIZE_SMALL)->render() . '</a>';
         } else {
@@ -1112,7 +1126,8 @@ class RecordListBrowserFileList extends AbstractRecordList
                 $confirmationCheck = '0';
             }
 
-            $deleteUrl = BackendUtility::getModuleUrl('tce_file');
+            $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+            $deleteUrl = (string)$uriBuilder->buildUriFromRoute('tce_file');
             $confirmationMessage = sprintf($this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:mess.delete'), $fileOrFolderObject->getName()) . $referenceCountText;
             $title = $this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:cm.delete');
             $cells['delete'] = '<a href="#" class="btn btn-default t3js-filelist-delete" data-content="' . htmlspecialchars($confirmationMessage)
@@ -1131,7 +1146,7 @@ class RecordListBrowserFileList extends AbstractRecordList
         if (is_array($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['fileList']['editIconsHook'])) {
             $cells['__fileOrFolderObject'] = $fileOrFolderObject;
             foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['fileList']['editIconsHook'] as $classData) {
-                $hookObject = GeneralUtility::getUserObj($classData);
+                $hookObject = GeneralUtility::makeInstance($classData);
                 if (!$hookObject instanceof FileListEditIconHookInterface) {
                     throw new \UnexpectedValueException(
                         $classData . ' must implement interface ' . FileListEditIconHookInterface::class,
@@ -1350,7 +1365,8 @@ class RecordListBrowserFileList extends AbstractRecordList
     {
         $lang = $this->getLanguageService();
         // Create link to showing details about the file in a window:
-        $Ahref = BackendUtility::getModuleUrl('show_item', [
+        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
+        $Ahref = (string)$uriBuilder->buildUriFromRoute('show_item', [
             'type' => 'file',
             'table' => '_FILE',
             'uid' => $fileOrFolderObject->getCombinedIdentifier(),

@@ -16,7 +16,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *
  * @package TYPO3
  * @subpackage tx_xfilelist
- * @author 2017-2019 J.Kummer
+ * @author J.Kummer
  * @author 2018 T.Karliczek
  * @copyright Copyright belongs to the respective authors
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later

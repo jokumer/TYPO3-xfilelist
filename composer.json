@@ -12,9 +12,10 @@
             "role": "Developer"
         }
     ],
+    "homepage": "https://github.com/jokumer/TYPO3-xfilelist",
     "license": "GPL-3.0",
     "require": {
-        "typo3/cms-core": "^9.5"
+        "typo3/cms-core": "^10"
     },
     "autoload": {
         "psr-4": {
@@ -24,5 +25,10 @@
     "replace": {
         "xfilelist": "self.version",
         "typo3-ter/xfilelist": "self.version"
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "xfilelist"
+        }
     }
 }
